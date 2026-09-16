@@ -383,3 +383,8 @@ docs/            Opto Plus 16-segment variation chart
 The alphabet charts in `docs/` — both the capital variation sheet and the lower-case
 sheet — are Opto Plus LED Corp.'s, and the segment naming follows their OPD-AS5010
 datasheet.
+
+## License
+
+MIT — see [LICENSE](LICENSE). The reference imagery the fonts and glare model were
+built from is third-party and is not included; see [docs/README.md](docs/README.md).
