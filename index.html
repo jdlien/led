@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Segment Display Simulator — 7 · 14 · 16</title>
+<meta name="description" content="A vanilla HTML/SVG/JS simulator for 7-, 14- and 16-segment LED displays.">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<svg class="filterhost" aria-hidden="true" focusable="false"><defs id="bloomdefs"></defs></svg>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="dot" aria-hidden="true"></span>
+    <h1>Segment<em>Sim</em></h1>
+  </div>
+  <p class="tagline">7 · 14 · 16 segment LED simulator — click any segment to toggle it · <a href="alphabet.html">alphabet sheet</a></p>
+</header>
+
+<main>
+
+  <section class="stage" aria-label="Display">
+    <div class="module">
+      <div class="face" id="face"></div>
+    </div>
+    <p class="hint" id="hint"></p>
+  </section>
+
+  <section class="panel" aria-label="Controls">
+
+    <div class="field span">
+      <label for="text">Text</label>
+      <input id="text" type="text" autocomplete="off" autocapitalize="off"
+             spellcheck="false" placeholder="type something…">
+    </div>
+
+    <div class="field">
+      <label>Display</label>
+      <div class="btngroup" id="type" role="group">
+        <button type="button" data-v="7">7</button>
+        <button type="button" data-v="14">14</button>
+        <button type="button" data-v="16" class="on">16</button>
+        <button type="button" data-v="21">21</button>
+        <button type="button" data-v="5x7">5&times;7</button>
+      </div>
+    </div>
+
+    <div class="field" id="ringsField" hidden>
+      <label for="rings">LEDs per dot</label>
+      <select id="rings">
+        <option value="0">1 &mdash; single die</option>
+        <option value="1" selected>7 &mdash; one ring</option>
+        <option value="2">19 &mdash; two rings</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="style">Font</label>
+      <select id="style">
+        <option value="classic">Classic</option>
+        <option value="optoplus">Opto Plus chart</option>
+      </select>
+    </div>
+
+    <div class="field wide2">
+      <label>Emitter <output id="presetName">LED · GaAsP red</output></label>
+      <div class="swatches" id="swatches">
+        <input type="color" id="custom" value="#ff2d17" title="Custom colour">
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="bloom" title="How far the light spreads — optics">Bloom <output id="bloomOut">45</output></label>
+      <input id="bloom" type="range" min="0" max="100" step="1" value="45">
+    </div>
+
+    <div class="field">
+      <label for="blowout" title="How hard the core clips to white — exposure">Blowout <output id="blowoutOut">42</output></label>
+      <input id="blowout" type="range" min="0" max="100" step="1" value="42">
+    </div>
+
+    <div class="field">
+      <label for="unlit" title="How visible the unlit dice are — ambient light on dark plastic">
+        Unlit <output id="unlitOut">45</output>
+      </label>
+      <input id="unlit" type="range" min="0" max="100" step="1" value="45">
+    </div>
+
+    <div class="field" id="hdrField" hidden>
+      <label for="hdrBoost" title="Emission above SDR white — needs an HDR display">
+        <span class="chk"><input type="checkbox" id="hdrOn"> HDR</span>
+        <output id="hdrBoostOut">off</output>
+      </label>
+      <input id="hdrBoost" type="range" min="1" max="8" step="0.1" value="3" disabled>
+    </div>
+
+    <p class="hdrnote" id="hdrNote" hidden></p>
+
+    <div class="field">
+      <label for="slant">Slant <output id="slantOut">0°</output></label>
+      <input id="slant" type="range" min="0" max="22" step="1" value="0">
+    </div>
+
+    <div class="field">
+      <label for="size">Size <output id="sizeOut">140px</output></label>
+      <input id="size" type="range" min="48" max="300" step="2" value="140">
+    </div>
+
+    <div class="field">
+      <label for="thick">Thickness <output id="thickOut">11</output></label>
+      <input id="thick" type="range" min="5" max="18" step="0.5" value="11">
+    </div>
+
+    <div class="field">
+      <label for="gap">Gap <output id="gapOut">2.6</output></label>
+      <input id="gap" type="range" min="0" max="6" step="0.2" value="2.6">
+    </div>
+
+    <div class="field span checks">
+      <label class="chk"><input type="checkbox" id="labels"> Segment labels</label>
+      <label class="chk"><input type="checkbox" id="slashzero"> Slashed zero</label>
+      <label class="chk"><input type="checkbox" id="lowercase" checked> Lowercase glyphs</label>
+    </div>
+
+    <div class="field span actions">
+      <button type="button" id="testOn">Lamp test</button>
+      <button type="button" id="clearOv">Reset edits</button>
+      <button type="button" id="copyArr">Copy C array</button>
+      <button type="button" id="italicPreset">Italic preset</button>
+    </div>
+
+  </section>
+
+  <section class="inspector" id="inspector" aria-label="Segment inspector">
+    <p class="empty">Click a character to inspect and edit its segments.</p>
+  </section>
+
+</main>
+
+<footer>
+  <p>Segment names follow the <code>OPD-AS5010</code> pinout — <code>A1 A2 B C D1 D2 E F G1 G2 H J K L M N</code>, clockwise. Bit 0 is the first name; <code>DP</code> is the high bit.</p>
+</footer>
+
+<script src="js/geometry.js"></script>
+<script src="js/matrix.js"></script>
+<script src="js/fonts.js"></script>
+<script src="js/display.js"></script>
+<script src="js/hdr.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

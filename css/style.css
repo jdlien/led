@@ -1,0 +1,315 @@
+/* ---------------------------------------------------------------- tokens */
+:root {
+  --bg:        #0a0c0f;
+  --bg-2:      #11151a;
+  --panel:     #151a21;
+  --panel-2:   #1b222b;
+  --line:      #263040;
+  --ink:       #c7d3e1;
+  --ink-dim:   #7b8899;
+  --ink-faint: #4c5765;
+
+  --led:       #ff2b1c;
+  --led-off:   rgba(255, 43, 28, 0.085);
+  --led-glow:  rgba(255, 43, 28, 0.55);
+
+  --face:      #07080a;
+  --glyph-h:   140px;
+
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(1200px 600px at 50% -10%, #141a22 0%, transparent 60%),
+    var(--bg);
+  color: var(--ink);
+  font: 14px/1.5 var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --------------------------------------------------------------- topbar */
+.topbar {
+  display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap;
+  padding: 18px 24px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand .dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--led);
+  box-shadow: 0 0 10px var(--led-glow);
+}
+.topbar h1 {
+  margin: 0; font-size: 16px; font-weight: 650; letter-spacing: 0.02em;
+}
+.topbar h1 em { font-style: normal; color: var(--ink-dim); font-weight: 400; }
+.tagline { margin: 0; color: var(--ink-faint); font-size: 12.5px; }
+
+/* ----------------------------------------------------------------- main */
+main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-areas: "stage inspector" "panel inspector";
+  gap: 20px;
+  padding: 20px 24px 8px;
+  align-items: start;
+}
+@media (max-width: 960px) {
+  main { grid-template-columns: 1fr; grid-template-areas: "stage" "panel" "inspector"; }
+}
+
+/* ---------------------------------------------------------------- stage */
+.stage { grid-area: stage; min-width: 0; }
+
+.module {
+  background: linear-gradient(180deg, #1d232c 0%, #12161c 100%);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 18px 40px -22px #000, inset 0 1px 0 #2c3644;
+}
+
+.face {
+  position: relative;
+  background: #000;
+  border-radius: 6px;
+  min-height: calc(var(--glyph-h) + 36px);
+  padding: 18px 16px;
+  display: flex; flex-wrap: wrap; align-items: center; align-content: center;
+  gap: calc(var(--glyph-h) * 0.014);
+  overflow-x: auto;
+  box-shadow: inset 0 0 0 1px #1a1f27, inset 0 2px 14px rgba(0,0,0,0.9);
+}
+/* faint diffuser sheen across the window */
+.face::after {
+  content: ""; position: absolute; inset: 0; border-radius: 6px; pointer-events: none;
+  background: linear-gradient(105deg, rgba(255,255,255,0.016) 0%, transparent 38%);
+}
+
+.glyph {
+  height: var(--glyph-h);
+  width: auto;
+  flex: 0 0 auto;
+  display: block;
+  overflow: visible;
+}
+.glyph.sel .hit { fill: rgba(255,255,255,0.045); }
+.hit { fill: transparent; cursor: pointer; }
+
+.seg {
+  fill: var(--led-off);
+  cursor: pointer;
+  transition: fill 90ms linear;
+}
+.seg.on { fill: var(--led); }
+.seg:hover { fill: color-mix(in srgb, var(--led) 45%, transparent); }
+body.noghost .seg:not(.on) { fill: transparent; }
+
+
+.seglabels text {
+  font: 500 7px var(--mono);
+  fill: rgba(160, 185, 215, 0.75);
+  text-anchor: middle;
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: rgba(0,0,0,0.85); stroke-width: 2px;
+}
+
+.hint {
+  margin: 10px 2px 0; min-height: 18px;
+  color: var(--ink-faint); font-size: 12px; font-family: var(--mono);
+}
+
+/* ---------------------------------------------------------------- panel */
+.panel {
+  grid-area: panel;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px 18px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px 18px 18px;
+}
+.field { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.field.span { grid-column: 1 / -1; }
+.field.wide2 { grid-column: span 2; }
+.field > label {
+  font: 600 10.5px/1 var(--sans);
+  letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-faint);
+  display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+}
+.field output { font-family: var(--mono); color: var(--ink-dim); letter-spacing: 0; text-transform: none; }
+
+input[type="text"], select {
+  width: 100%;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--ink);
+  font: 14px var(--mono);
+  padding: 9px 11px;
+}
+input[type="text"]:focus, select:focus {
+  outline: none; border-color: var(--led);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--led) 18%, transparent);
+}
+select { appearance: none; cursor: pointer; padding-right: 28px;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink-faint) 50%),
+                    linear-gradient(135deg, var(--ink-faint) 50%, transparent 50%);
+  background-position: calc(100% - 15px) 50%, calc(100% - 10px) 50%;
+  background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; }
+
+input[type="range"] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 22px; background: transparent; cursor: pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 3px; border-radius: 2px; background: var(--line);
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 14px; height: 14px; margin-top: -5.5px;
+  border-radius: 50%; background: var(--ink-dim); border: none;
+}
+input[type="range"]:focus::-webkit-slider-thumb,
+input[type="range"]:hover::-webkit-slider-thumb { background: var(--led); }
+
+.btngroup { display: flex; gap: 0; }
+.btngroup button {
+  flex: 1; padding: 8px 4px;
+  background: var(--bg-2); color: var(--ink-dim);
+  border: 1px solid var(--line); border-right-width: 0;
+  font: 600 12px var(--mono); cursor: pointer;
+}
+.btngroup button:first-child { border-radius: 7px 0 0 7px; }
+.btngroup button:last-child { border-radius: 0 7px 7px 0; border-right-width: 1px; }
+.btngroup button.on { background: var(--led); color: #0a0c0f; border-color: var(--led); }
+
+.swatches { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.swatches button {
+  width: 21px; height: 21px; border-radius: 50%; cursor: pointer;
+  background: var(--s); border: 1px solid rgba(255,255,255,0.16); padding: 0;
+}
+.swatches button.on { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--s); }
+.swatches input[type="color"] {
+  width: 22px; height: 22px; padding: 0; border: 1px solid var(--line);
+  border-radius: 50%; background: transparent; cursor: pointer;
+}
+.swatches input[type="color"]::-webkit-color-swatch-wrapper { padding: 1px; }
+.swatches input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50%; }
+
+.checks { flex-direction: row; flex-wrap: wrap; gap: 8px 18px; }
+.chk {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 12.5px; color: var(--ink-dim); cursor: pointer;
+  text-transform: none; letter-spacing: 0;
+}
+.chk input { accent-color: var(--led); width: 14px; height: 14px; }
+
+.actions { flex-direction: row; flex-wrap: wrap; gap: 8px; }
+.actions button, .vbtn {
+  background: var(--panel-2); color: var(--ink-dim);
+  border: 1px solid var(--line); border-radius: 7px;
+  padding: 7px 12px; font: 500 12px var(--sans); cursor: pointer;
+}
+.actions button:hover, .vbtn:hover { color: var(--ink); border-color: #38455a; }
+.actions button:active { transform: translateY(1px); }
+
+/* ------------------------------------------------------------ inspector */
+.inspector {
+  grid-area: inspector;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px 18px 18px;
+  font-size: 13px;
+  position: sticky; top: 16px;
+}
+.inspector .empty { color: var(--ink-faint); margin: 0; font-size: 12.5px; }
+.inspector h2 {
+  margin: 0 0 12px; font: 600 10.5px/1 var(--sans);
+  letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-faint);
+}
+.kv { display: grid; grid-template-columns: 58px 1fr; gap: 5px 10px; margin-bottom: 14px; }
+.kv dt { color: var(--ink-faint); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; padding-top: 2px; }
+.kv dd { margin: 0; font-family: var(--mono); font-size: 12.5px; color: var(--ink); word-break: break-all; }
+.kv dd .big { font-size: 15px; color: var(--led); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 0 0 14px; }
+.chip {
+  font: 600 11px var(--mono);
+  padding: 4px 7px; border-radius: 5px; cursor: pointer;
+  background: var(--bg-2); border: 1px solid var(--line); color: var(--ink-faint);
+}
+.chip.on { background: var(--led); border-color: var(--led); color: #0a0c0f; }
+
+.vrow { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.vrow span { color: var(--ink-faint); font-size: 11.5px; font-family: var(--mono); }
+.edited { color: var(--led); font-size: 11px; font-family: var(--mono); }
+
+/* --------------------------------------------------------------- footer */
+footer {
+  padding: 16px 24px 28px; color: var(--ink-faint); font-size: 11.5px;
+  max-width: 900px;
+}
+footer code { font-family: var(--mono); color: var(--ink-dim); }
+
+.tagline a { color: var(--ink-dim); text-decoration: underline; text-underline-offset: 2px; }
+.tagline a:hover { color: var(--led); }
+
+/* Off-screen host for the shared bloom filter; referenced by url(#bloom). */
+.filterhost { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+/* No ambient-spill hack here on purpose. An inset box-shadow glows inward from the
+ * BEZEL, uniformly, whether or not anything near that edge is lit — the frame lights
+ * up instead of the emitters. The wide halo in the bloom filter already spills onto
+ * the face, and it spills from where the light actually is. */
+
+
+/* ── HDR emission layer ──────────────────────────────────────────────
+ * The canvas sits UNDER the glyphs and supplies the light; the SVGs stay on
+ * top with their lit group at opacity 0, so they keep their click targets.
+ * The unlit dice remain visible and are mostly transparent, so the HDR halo
+ * washes over them exactly as it does on a real board. */
+#hdrcanvas {
+  position: absolute; left: 0; top: 0;
+  pointer-events: none;
+  display: none;
+  z-index: 0;
+}
+.face.hdr #hdrcanvas { display: block; }
+.face.hdr .glyph { position: relative; z-index: 1; }
+.face.hdr .glyph .lit { opacity: 0; }
+/* the canvas draws the unlit dice too, with real dome shading - the SVG copy
+   stays for hit-testing only, or the two would stack */
+.face.hdr .glyph .off { opacity: 0; }
+/* the diffuser sheen would sit on top of real emission and grey it down */
+.face.hdr::after { opacity: 0.35; }
+
+.hdrnote {
+  font: 11px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--muted, #7c8798);
+  margin: -2px 0 0;
+}
+.hdrnote b.ok { color: #16a34a; }
+.hdrnote b.no { color: #dc2626; }
+
+/* One line, always. `.field` is a flex column, so this must NOT be a .field. */
+.hdrnote {
+  grid-column: 1 / -1;
+  display: block;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font: 11px/1.4 var(--mono); color: var(--ink-faint);
+  margin: -4px 0 0;
+}
+.hdrnote b { font-weight: 600; }
+/* the HDR label carries a checkbox on its left; keep it from being stretched
+   by the label's space-between */
+#hdrField > label > .chk { text-transform: none; letter-spacing: 0.09em; }

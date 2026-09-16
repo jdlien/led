@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alphabet sheet — SegmentSim</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  main { display: block; padding: 20px 24px 40px; }
+  .sheet { background: var(--panel); border: 1px solid var(--line);
+           border-radius: 12px; padding: 18px; margin-bottom: 22px; }
+  .sheet h2 { margin: 0 0 14px; font: 600 11px/1 var(--sans);
+              letter-spacing: .09em; text-transform: uppercase; color: var(--ink-faint); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 10px; }
+  .cellwrap { background: var(--face); border-radius: 6px; padding: 10px 6px 4px;
+              text-align: center; box-shadow: inset 0 0 0 1px #171c23; }
+  .cellwrap .glyph { height: 84px; margin: 0 auto; }
+  .cellwrap b { display:block; font: 600 10px var(--mono); color: var(--ink-faint);
+                margin-top: 6px; letter-spacing: .05em; }
+  .cellwrap b .hex { color: var(--ink-dim); font-weight: 400; }
+  .cellwrap .spec { display:block; margin-top:4px; font:500 8.5px ui-monospace,monospace;
+                    color:#5d6b7d; text-decoration:none; cursor:pointer; line-height:1.3;
+                    word-break:break-word; }
+  .cellwrap .spec:hover { color: var(--led); }
+  .cellwrap.edited { outline: 1px solid var(--led); }
+  .cellwrap .seg { cursor: pointer; }
+  .toolbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:18px; }
+</style>
+</head>
+<body>
+<svg class="filterhost" aria-hidden="true" focusable="false"><defs id="bloomdefs"></defs></svg>
+<header class="topbar">
+  <div class="brand"><span class="dot"></span><h1>Alphabet<em>Sheet</em></h1></div>
+  <p class="tagline">every glyph in the font, with its bitmask — <a href="index.html" style="color:var(--ink-dim)">back to the simulator</a></p>
+</header>
+<main>
+  <div class="toolbar">
+    <div class="btngroup" id="type">
+      <button type="button" data-v="7">7</button>
+      <button type="button" data-v="14">14</button>
+      <button type="button" data-v="16" class="on">16</button>
+        <button type="button" data-v="21">21</button>
+        <button type="button" data-v="5x7">5&times;7</button>
+    </div>
+    <select id="style" style="width:auto">
+      <option value="classic">Classic</option>
+      <option value="optoplus">Opto Plus chart</option>
+    </select>
+    <label class="chk"><input type="checkbox" id="slant"> Italic</label>
+    <label class="chk"><input type="checkbox" id="labels"> Labels</label>
+    <label class="chk"><input type="checkbox" id="alts"> Show all variants</label>
+  </div>
+  <div id="out"></div>
+</main>
+<script src="js/geometry.js"></script>
+<script src="js/matrix.js"></script>
+<script src="js/fonts.js"></script>
+<script src="js/display.js"></script>
+<script>
+(function () {
+  'use strict';
+  var G = window.LED.geometry, F = window.LED.fonts, D = window.LED.display;
+  var out = document.getElementById('out');
+  var type = '16', style = 'classic', slant = 0, labels = false, alts = false, bloom = 48, blowout = 36;
+  /* Same query-string convention as the simulator, so a sheet is linkable. */
+  (function () {
+    try {
+      var q = new URLSearchParams(location.search);
+      if (q.get('type')) type = q.get('type');
+      if (q.get('style')) style = q.get('style');
+      if (q.get('bloom')) bloom = parseFloat(q.get('bloom'));
+      if (q.get('blowout')) blowout = parseFloat(q.get('blowout'));
+      if (q.get('slant')) slant = parseFloat(q.get('slant'));
+      labels = q.get('labels') === '1';
+      alts = q.get('alts') === '1';
+    } catch (e) { /* ignore */ }
+  })();
+  document.getElementById('bloomdefs').innerHTML = D.bloomFilter(bloom, blowout);
+
+  /* Per-cell edits, keyed by character + variant. The sheet is where you SPOT a bad
+   * glyph, so it has to be where you can FIX one — otherwise you end up describing
+   * segments in prose, which is exactly what this is here to stop. */
+  var edits = {};
+  function key(ch, v) { return ch + '\u0000' + v; }
+
+  function setFor(ch, v, count) {
+    var k = key(ch, v);
+    if (edits[k]) return edits[k];
+    return F.specToSet(F.lookup(type, ch, count > 1 ? v : null, style, true).spec);
+  }
+
+  function specOf(ch, v, count) {
+    var set = setFor(ch, v, count);
+    return F.ORDER[type].filter(function (n) { return set[n]; }).join(' ');
+  }
+
+  function cellHTML(ch, v, count, geo) {
+    var set = setFor(ch, v, count);
+    var spec = F.ORDER[type].filter(function (n) { return set[n]; }).join(' ');
+    var label = ch === ' ' ? 'SP' : ch.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    var edited = !!edits[key(ch, v)];
+    return '<div class="cellwrap' + (edited ? ' edited' : '') +
+      '" data-ch="' + encodeURIComponent(ch) + '" data-v="' + v + '" data-count="' + count + '">' +
+      D.glyph({ index: 0, geo: geo, type: type, set: set, slant: slant,
+                bloom: bloom, labels: labels, label: ch }) +
+      '<b>' + label + (count > 1 ? '<span class="hex"> v' + (v + 1) + '</span>' : '') +
+      '<br><span class="hex">' + hex(type, F.maskOf(type, set)) + '</span></b>' +
+      '<u class="spec" title="click to copy the fonts.js line">' + (spec || '(empty)') + '</u>' +
+      '</div>';
+  }
+
+  function hex(t, m) {
+    var d = Math.ceil(F.ORDER[t].length / 4), s = m.toString(16).toUpperCase();
+    while (s.length < d) s = '0' + s;
+    return '0x' + s;
+  }
+
+  function section(title, chars) {
+    var geo = G.build({ thickness: 11, gap: 2.6, type: type, rings: 1 });
+    var h = ['<div class="sheet"><h2>' + title + '</h2><div class="grid">'];
+    chars.forEach(function (ch) {
+      var entry = F.TABLES[type][ch];
+      if (!entry) return;
+      var count = alts ? entry.length : 1;
+      for (var v = 0; v < count; v++) {
+        var look = F.lookup(type, ch, alts ? v : null, style, true);
+        var set = F.specToSet(look.spec);
+        var mask = F.maskOf(type, set);
+        h.push(cellHTML(ch, v, count, geo));
+      }
+    });
+    h.push('</div></div>');
+    return h.join('');
+  }
+
+  function render() {
+    var all = Object.keys(F.TABLES[type]);
+    var alpha = all.filter(function (c) { return /^[A-Z]$/.test(c); });
+    var lower = all.filter(function (c) { return /^[a-z]$/.test(c); });
+    var digit = all.filter(function (c) { return /^[0-9]$/.test(c); });
+    var punct = all.filter(function (c) { return !/^[A-Za-z0-9]$/.test(c); });
+    out.innerHTML =
+      section('Digits', digit) +
+      section('Uppercase', alpha) +
+      (lower.length ? section('Lowercase', lower) : '') +
+      section('Punctuation & symbols', punct);
+  }
+
+  document.getElementById('out').addEventListener('click', function (e) {
+    var cell = e.target.closest('.cellwrap');
+    if (!cell) return;
+    var ch = decodeURIComponent(cell.dataset.ch);
+    var v = +cell.dataset.v, count = +cell.dataset.count;
+
+    if (e.target.closest('.spec')) {
+      copy(F.fontLine(type, ch, count > 1 ? v : 0, specOf(ch, v, count)),
+           e.target.closest('.spec'));
+      return;
+    }
+    var seg = e.target.closest('.seg');
+    if (!seg) return;
+    var set = setFor(ch, v, count), out = {};
+    Object.keys(set).forEach(function (n) { if (set[n]) out[n] = true; });
+    if (out[seg.dataset.seg]) delete out[seg.dataset.seg]; else out[seg.dataset.seg] = true;
+    edits[key(ch, v)] = out;
+    var geo = G.build({ thickness: 11, gap: 2.6, type: type, rings: 1 });
+    cell.outerHTML = cellHTML(ch, v, count, geo);
+  });
+
+  function copy(text, el) {
+    var done = function () {
+      if (!el) return;
+      var old = el.textContent;
+      el.textContent = 'copied';
+      setTimeout(function () { el.textContent = old; }, 1000);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, done);
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } catch (err) { /* ignore */ }
+      document.body.removeChild(ta); done();
+    }
+  }
+
+  document.getElementById('type').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    [].forEach.call(this.children, function (c) { c.classList.toggle('on', c === b); });
+    type = b.dataset.v; edits = {}; render();
+  });
+  document.getElementById('style').addEventListener('change', function () { style = this.value; edits = {}; render(); });
+  document.getElementById('slant').addEventListener('change', function () { slant = this.checked ? 12 : 0; render(); });
+  document.getElementById('labels').addEventListener('change', function () { labels = this.checked; render(); });
+  document.getElementById('alts').addEventListener('change', function () { alts = this.checked; render(); });
+  [].forEach.call(document.getElementById('type').children, function (c) {
+    c.classList.toggle('on', c.dataset.v === type);
+  });
+  document.getElementById('style').value = style;
+  document.getElementById('slant').checked = !!slant;
+  document.getElementById('labels').checked = labels;
+  document.getElementById('alts').checked = alts;
+  render();
+})();
+</script>
+</body>
+</html>

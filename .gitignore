@@ -1,0 +1,10 @@
+.DS_Store
+
+# Reference imagery is NOT redistributed - see docs/README.md.
+# These are third-party scans, a vendor product photo and HDR sample images.
+# They are reference material for building the fonts and the glare model,
+# not work this repo is entitled to republish.
+docs/*.png
+docs/*.jpg
+docs/*.jpeg
+docs/*.avif
