@@ -112,13 +112,13 @@ window.LED = window.LED || {};
      *   j  Opto's A1 A2 C D1 D2 leaves the top bar floating clear of the stem. B C D1 —
      *      full right stroke, hook left at the bottom — actually reads as a j, and merges
      *      to 'B C D' on 14-seg, which is the same shape. */
-    'a': ['A1 A2 B C D1 D2 E G1 G2'],
+    'a': ['A1 A2 B C D1 D2 E G1 G2', 'D1 E G1 L M'],   /* v2 is JD's, not the chart's: bowl + L tail */
     'b': ['C D1 D2 E F G1 G2'],
     'c': ['D1 D2 E G1 G2'],
     'd': ['B C D1 D2 E G1 G2'],
-    'e': ['A1 A2 B D1 D2 E F G1 G2'],
+    'e': ['A1 A2 B D1 D2 E F G1 G2', 'D1 E G1 N'],     /* v2 is JD's, not the chart's */
     'f': ['A2 G1 G2 J M'],
-    'g': ['A1 A2 B C D1 D2 F G1 G2'],
+    'g': ['A1 A2 B C D1 D2 F G1 G2', 'B C D2 G2 K'],   /* v2 after Adafruit's 14-seg backpack g; D2 merges to their full D */
     'h': ['C E F G1 G2'],
     'i': ['A1 D1 D2 G1 M'],
     'j': ['A2 C D2'],
