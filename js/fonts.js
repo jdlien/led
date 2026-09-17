@@ -321,9 +321,13 @@ window.LED = window.LED || {};
     'i': ['D G1 M'],       /* was A D G1 M -> full top bar on a lowercase i */
     'f': ['A E F G1 G2'],  /* uppercase F; see below */
     't': ['G1 G2 J M'],    /* was D G1 G2 J M — D2 is a foot, and a full bar isn't one */
-    'j': ['B C D']         /* 16-seg j is A2 C D2; BOTH are lone half-bars, so the
+    'j': ['B C D'],        /* 16-seg j is A2 C D2; BOTH are lone half-bars, so the
                             * merge gives 'A C D' — a top bar floating clear of the
                             * stem, which is the mangled shape this replaced. */
+    'a': ['D E G1 M', 'A B C D E G1 G2']
+                           /* was D E G1 L M. The merged D runs out under the stem and
+                            * is already the tail, so the L tail closed a triangle with
+                            * it. The chart's form stays at v2 for OPTOPLUS_PICK. */
   };
 
   var F14 = (function () {
