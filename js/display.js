@@ -154,7 +154,17 @@ window.LED = window.LED || {};
               0, 0, 0, 1, 0].map(function (n) { return (+n).toFixed(3); }).join(' ');
     }
 
-    var out = '<filter id="bloom" x="-130%" y="-130%" width="360%" height="360%"' +
+    /* The region is in glyph units, NOT a percentage of the lit group's bounding box.
+     * A percentage follows whatever happens to be lit, so a '-' or a '1' - one thin
+     * bar - got a region barely wider than the bar, and the halo was cut off in a
+     * hard-edged strip. Nothing outside the SVG can fix that; padding and overflow
+     * never reach the filter. Instead: the whole cell, plus four sigma of the widest
+     * blur on every side, past which the halo is below one 8-bit step. contentW tops
+     * out just under 140 (5x7 at maximum thickness), so 160 covers every type. */
+    var reach = Math.ceil(4 * wide);
+    var out = '<filter id="bloom" filterUnits="userSpaceOnUse"' +
+              ' x="' + (-reach) + '" y="' + (-reach) + '"' +
+              ' width="' + (160 + 2 * reach) + '" height="' + (G.FRAME.h + 2 * reach) + '"' +
               ' color-interpolation-filters="sRGB">';
     var merge = [];
 

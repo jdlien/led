@@ -290,10 +290,16 @@ window.LED = window.LED || {};
    * bitmap the size of the face. Layout comes from the browser - we read each
    * glyph's measured rect rather than re-deriving flex positions, because the
    * browser's answer is the one that's actually on screen. */
-  function buildMask(face, dpr) {
+  function buildMask(face, dpr, canvas) {
     var glyphs = face.querySelectorAll('svg.glyph');
+    /* The canvas lives inside the face, so its size from the LAST frame counts
+     * toward scrollWidth: the mask could grow with the window but never shrink
+     * back. Every measurement below is taken without it, and it comes back
+     * before this function yields, so nothing paints in between. */
+    if (canvas) canvas.style.display = 'none';
     var fr = face.getBoundingClientRect();
     var w = Math.max(1, Math.round(face.scrollWidth * dpr));
+    var scrollLeft = face.scrollLeft;
     var h = Math.max(1, Math.round(fr.height * dpr));
 
     var cv = document.createElement('canvas');
@@ -381,7 +387,7 @@ window.LED = window.LED || {};
         jobs.push(new Promise(function (res) {
           var img = new Image();
           img.onload = function () {
-            g2.drawImage(img, Math.round((r.left - fr.left + face.scrollLeft) * dpr),
+            g2.drawImage(img, Math.round((r.left - fr.left + scrollLeft) * dpr),
                               Math.round((r.top - fr.top) * dpr), cw, ch);
             res();
           };
@@ -390,6 +396,7 @@ window.LED = window.LED || {};
         }));
       })(glyphs[i]);
     }
+    if (canvas) canvas.style.display = '';
     return Promise.all(jobs).then(function () {
       /* Cheap liveness stat. An empty mask renders a perfectly black panel and
        * looks exactly like "HDR is broken", so measure it rather than guess. */
@@ -497,7 +504,7 @@ window.LED = window.LED || {};
       if (!ok) return false;
       var dpr = Math.min(window.devicePixelRatio || 1, 2);
       var token = ++state.pending;
-      return buildMask(face, dpr).then(function (maskCanvas) {
+      return buildMask(face, dpr, canvas).then(function (maskCanvas) {
         if (token !== state.pending) return true;   /* a newer render superseded us */
         var d = state.device;
         var w = maskCanvas.width, h = maskCanvas.height;

@@ -301,6 +301,34 @@ footer code { font-family: var(--mono); color: var(--ink-dim); }
 .hdrnote b.ok { color: #16a34a; }
 .hdrnote b.no { color: #dc2626; }
 
+/* ── Screenshot mode ─────────────────────────────────────────────────
+ * The face becomes the whole window: pure black to every edge, glyphs centred,
+ * and padding sized to the bloom so the halo is never anywhere near an edge.
+ * It covers the page rather than hiding it, so leaving restores the scroll
+ * position. Everything that would tint the black goes: the bezel shadow, the
+ * diffuser sheen, the selection fill and the hover fill. */
+body.shot { overflow: hidden; }
+body.shot .face {
+  position: fixed; inset: 0; z-index: 100;
+  min-height: 0;
+  padding: max(160px, calc(var(--glyph-h) * 0.75));
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 0;
+  box-shadow: none;
+}
+body.shot .face::after { display: none; }
+body.shot .glyph { pointer-events: none; }
+body.shot .glyph.sel .hit { fill: transparent; }
+
+.shotnote {
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+  z-index: 101; margin: 0; pointer-events: none;
+  font: 12px var(--mono); color: var(--ink-dim);
+  animation: shotnote 2.4s ease-in forwards;
+}
+@keyframes shotnote { 0%, 55% { opacity: 1; } 100% { opacity: 0; } }
+
 /* One line, always. `.field` is a flex column, so this must NOT be a .field. */
 .hdrnote {
   grid-column: 1 / -1;

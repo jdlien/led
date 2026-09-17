@@ -273,7 +273,7 @@ index.html?text=HELLO&type=14&slant=12&color=%2335ff72&size=170&labels=1
 ```
 
 Recognised: `text` `type` `style` `color` `preset` `bloom` `slant` `size` `thick` `gap`
-`ghost` `labels` `slashzero` `lowercase`. Otherwise settings persist in `localStorage`.
+`ghost` `labels` `slashzero` `lowercase` `shot`. Otherwise settings persist in `localStorage`.
 
 ## Other things worth knowing
 
@@ -285,6 +285,10 @@ Recognised: `text` `type` `style` `color` `preset` `bloom` `slant` `size` `thick
   from three primitives in `geometry.js` (mitred horizontal bar, mitred vertical bar,
   parallelogram diagonal), so the whole font rescales coherently.
 - **Lamp test** lights everything, which is what a real module does at power-on.
+- **Screenshot mode** turns the display face into the whole window: pure black to every
+  edge, glyphs centred, padding sized so the bloom never gets near an edge, and no
+  selection or hover tint. Works with HDR on. **Esc** leaves. `?shot=1` opens straight
+  into it; it is deliberately not remembered between visits.
 
 ## Bloom and Blowout — two sliders, because they are two phenomena
 
@@ -340,11 +344,17 @@ reads as CGI.
 
 One filter is defined once in the document and referenced by every glyph via
 `url(#bloom)`, so a 76-character string is 76 filter *references*, not 76 filter
-definitions. It is still real GPU work — three Gaussian blurs over a filter region 3.6×
-the glyph in each dimension — and I have not benchmarked it honestly (headless Chrome
+definitions. It is still real GPU work — three Gaussian blurs over a filter region of the
+whole cell plus four sigma of the widest blur on every side — and I have not benchmarked it honestly (headless Chrome
 freezes `performance.now()` under virtual time, so the obvious measurement lies). If a
 long string ever feels sticky, the bloom slider is the knob; at `0` the filter is not
 applied at all rather than being applied as a no-op.
+
+⚠️ **The filter region is in glyph units (`userSpaceOnUse`), not a percentage.** It used
+to be `-130%`/`360%` of the lit group's bounding box, which sounds generous and isn't: a
+`-` or a `1` is one thin bar, so its region was barely wider than the bar and the halo was
+cut off in a hard-edged strip. That clip happens inside the filter, so no amount of
+padding or `overflow` on the SVG or its containers can touch it.
 
 ⚠️ **Do not fake ambient spill with an inset `box-shadow` on the module face.** It glows
 inward from the bezel, uniformly, whether or not anything near that edge is lit — so the

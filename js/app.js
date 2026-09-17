@@ -49,7 +49,8 @@
     lowercase: true,
     variants: {},
     overrides: {},
-    selected: null
+    selected: null,
+    shot: false
   };
 
   var $ = function (s) { return document.querySelector(s); };
@@ -499,6 +500,48 @@
     render();
   });
 
+  /* ------------------------------------------------------ screenshot mode */
+
+  /* The face goes full-window with the rest of the page covered, so a screen
+   * grab of any region around the text is just the display on black. Not
+   * persisted: reopening the page into a field with no controls and no hint
+   * would look broken. ?shot=1 still opens straight into it for a linked config. */
+  function setShot(on) {
+    state.shot = !!on;
+    document.body.classList.toggle('shot', state.shot);
+    var note = document.querySelector('.shotnote');
+    if (note) note.remove();
+    if (!state.shot) return;
+    /* a focused text box would keep taking keystrokes it can no longer show */
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    note = document.createElement('p');
+    note.className = 'shotnote';
+    note.textContent = 'Esc to exit';
+    note.addEventListener('animationend', function () { note.remove(); });
+    document.body.appendChild(note);
+  }
+
+  $('#shotBtn').addEventListener('click', function () {
+    setShot(true);
+    paintHDR();   /* the canvas is sized from the face, which just became the window */
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape' || !state.shot) return;
+    e.preventDefault();
+    setShot(false);
+    paintHDR();
+  });
+
+  /* Same reason as above: the HDR canvas has to follow the face, and in
+   * screenshot mode the face follows the window. */
+  var resizeQueued = false;
+  window.addEventListener('resize', function () {
+    if (!state.hdr || resizeQueued) return;
+    resizeQueued = true;
+    requestAnimationFrame(function () { resizeQueued = false; paintHDR(); });
+  });
+
   $('#copyArr').addEventListener('click', function () {
     var list = glyphList();
     var order = F.ORDER[state.type];
@@ -650,7 +693,7 @@
     try { q = new URLSearchParams(location.search); } catch (e) { return; }
     var num = { slant: 1, size: 1, thick: 1, gap: 1, bloom: 1, blowout: 1, rings: 1, hdrBoost: 1,
                 unlit: 1 };
-    var bool = { labels: 1, slashZero: 1, lowercase: 1, hdr: 1 };
+    var bool = { labels: 1, slashZero: 1, lowercase: 1, hdr: 1, shot: 1 };
     var alias = { slashzero: 'slashZero', colour: 'color' };
     q.forEach(function (val, key) {
       key = alias[key.toLowerCase()] || key;
@@ -681,5 +724,6 @@
       hdrNote(); render();
     });
   } catch (e) {}
-  $('#text').focus();
+  if (state.shot) { setShot(true); paintHDR(); }
+  else $('#text').focus();
 })();
