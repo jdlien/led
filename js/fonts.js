@@ -103,8 +103,12 @@ window.LED = window.LED || {};
      * another leaning bar. p and q close their bowls with K (not B); s, w and k use L
      * (not M). All four were transcribed wrong before anyone measured them.
      *
-     * Two entries deliberately DEVIATE from the chart, with Opto's own form kept as
+     * Five entries deliberately DEVIATE from the chart, with Opto's own form kept as
      * variant 2 so nothing is lost:
+     *   a e  JD's half-width forms. Opto's are full-height, which is the 'n' problem
+     *      below: a lowercase letter that climbs past the middle bar reads as a capital.
+     *   g  After Adafruit's 14-seg backpack: a K/B/G2 loop with a C D2 tail, and D2 merges
+     *      to their full D on 14-seg. Opto's g is segment-for-segment identical to '9'.
      *   n  Opto draw it full-height. Nothing collides with a half-height 'n' — checked —
      *      and full-height is exactly why 'television' renders as 'teleVisioN'. Only 9 of
      *      26 lowercase letters sit below the middle bar as it is; this makes it 10, and
@@ -112,13 +116,13 @@ window.LED = window.LED || {};
      *   j  Opto's A1 A2 C D1 D2 leaves the top bar floating clear of the stem. B C D1 —
      *      full right stroke, hook left at the bottom — actually reads as a j, and merges
      *      to 'B C D' on 14-seg, which is the same shape. */
-    'a': ['A1 A2 B C D1 D2 E G1 G2', 'D1 E G1 L M'],   /* v2 is JD's, not the chart's: bowl + L tail */
+    'a': ['D1 E G1 L M', 'A1 A2 B C D1 D2 E G1 G2'],   /* bowl + L tail */
     'b': ['C D1 D2 E F G1 G2'],
     'c': ['D1 D2 E G1 G2'],
     'd': ['B C D1 D2 E G1 G2'],
-    'e': ['A1 A2 B D1 D2 E F G1 G2', 'D1 E G1 N'],     /* v2 is JD's, not the chart's */
+    'e': ['D1 E G1 N', 'A1 A2 B D1 D2 E F G1 G2'],
     'f': ['A2 G1 G2 J M'],
-    'g': ['A1 A2 B C D1 D2 F G1 G2', 'B C D2 G2 K'],   /* v2 after Adafruit's 14-seg backpack g; D2 merges to their full D */
+    'g': ['B C D2 G2 K', 'A1 A2 B C D1 D2 F G1 G2'],
     'h': ['C E F G1 G2'],
     'i': ['A1 D1 D2 G1 M'],
     'j': ['A2 C D2'],
@@ -174,7 +178,7 @@ window.LED = window.LED || {};
   };
 
   /* Where the Opto Plus chart's primary row differs from the classic mapping. */
-  var OPTOPLUS_PICK = { J: 1, M: 1, V: 0, W: 1, Y: 1, S: 0 };
+  var OPTOPLUS_PICK = { J: 1, M: 1, V: 0, W: 1, Y: 1, S: 0, a: 1, e: 1, g: 1 };
 
   /* ----------------------------------------------------------------- 7-seg */
   var F7 = {
