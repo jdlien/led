@@ -585,16 +585,31 @@
     try {
       var keep = {};
       ['text', 'type', 'style', 'color', 'slant', 'size', 'thick', 'gap',
-       'unlit', 'labels', 'slashZero', 'lowercase', 'bloom', 'blowout', 'preset', 'rings'].forEach(function (k) { keep[k] = state[k]; });
+       'unlit', 'labels', 'slashZero', 'lowercase', 'bloom', 'blowout', 'preset', 'rings',
+       'hdr', 'hdrBoost'].forEach(function (k) { keep[k] = state[k]; });
+      /* Cell edits ride along with the text and type they were made against - see
+       * pendingEdits. `shot` is deliberately absent: reopening the page into a black
+       * field with no controls and no hint would read as a broken page. */
+      keep.edits = { text: state.text, type: state.type, variants: state.variants,
+                     overrides: state.overrides, selected: state.selected };
       localStorage.setItem(STORE, JSON.stringify(keep));
     } catch (e) { /* private window, don't care */ }
   }
+
+  /* Cell edits are keyed by CELL INDEX and by display type, so they only mean anything
+   * against the exact text and type they were made on - every path that changes either
+   * one throws them away for that reason. A query string can still change both AFTER
+   * load() runs, so they are held here and applied at boot only if both still match.
+   * A stale edit landing on different text would look like the font is wrong, which is
+   * the one thing a font auditing tool must never fake. */
+  var pendingEdits = null;
 
   function load() {
     try {
       var raw = localStorage.getItem(STORE);
       if (!raw) return;
       var saved = JSON.parse(raw);
+      if (saved.edits) pendingEdits = saved.edits;
       /* `ghost` was a boolean and is now the `unlit` level. Migrate rather than
        * ignore: a stored ghost:false would otherwise be silently dropped and the
        * unlit dice would reappear for someone who had deliberately turned them
@@ -708,6 +723,11 @@
 
   load();
   readParams();
+  if (pendingEdits && pendingEdits.text === state.text && pendingEdits.type === state.type) {
+    state.variants = pendingEdits.variants || {};
+    state.overrides = pendingEdits.overrides || {};
+    state.selected = (pendingEdits.selected === undefined) ? null : pendingEdits.selected;
+  }
   syncControls();
   $('#text').value = state.text;
   $('#style').value = state.style;

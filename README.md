@@ -275,6 +275,13 @@ index.html?text=HELLO&type=14&slant=12&color=%2335ff72&size=170&labels=1
 Recognised: `text` `type` `style` `color` `preset` `bloom` `slant` `size` `thick` `gap`
 `ghost` `labels` `slashzero` `lowercase` `shot`. Otherwise settings persist in `localStorage`.
 
+Every control persists, including **HDR** and its boost. So do per-cell **segment edits**,
+variant picks and the selected cell — but those are keyed by cell index and display type,
+so they are only restored onto the same text and the same type they were made against. A
+query string can change either one after the settings load, which is why they are held
+back and matched at boot rather than applied blind; a stale edit reappearing on different
+text would look exactly like a font bug. Screenshot mode is deliberately *not* persisted.
+
 ## Other things worth knowing
 
 - A `.` in the text folds onto the **previous** cell as its decimal point, the way a
