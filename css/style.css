@@ -293,6 +293,18 @@ footer code { font-family: var(--mono); color: var(--ink-dim); }
 /* the diffuser sheen would sit on top of real emission and grey it down */
 .face.hdr::after { opacity: 0.35; }
 
+/* Chrome 154 on macOS shows the HDR canvas clipped to SDR - washed out - when
+   it is the page's only compositing effect, and any backdrop-filter on the
+   page puts it back. Found 2026-09-29, when this page and sign.rednex.ca's
+   port of hdr.js both broke the night Chrome updated, with no code change. So:
+   one invisible pixel of blur, only while HDR is on. Delete once Chrome is
+   fixed, after checking this page without it. */
+body:has(.face.hdr)::after {
+  content: ''; position: fixed; left: 0; top: 0;
+  width: 1px; height: 1px; pointer-events: none;
+  backdrop-filter: blur(1px);
+}
+
 .hdrnote {
   font: 11px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
   color: var(--muted, #7c8798);
